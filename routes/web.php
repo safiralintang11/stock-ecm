@@ -7,6 +7,7 @@ use App\Http\Controllers\DisplayStockController;
 use App\Http\Controllers\MainStockController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SisaDisplayController;
 use App\Http\Controllers\StockAdjustmentController;
 use App\Http\Controllers\StockHistoryController;
 use App\Http\Controllers\StockMovementController;
@@ -41,6 +42,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/stock-outs', [StockOutController::class, 'index'])->name('stock-outs.index');
     Route::post('/stock-outs', [StockOutController::class, 'store'])->name('stock-outs.store');
+
+    Route::get('/sisa-display', [SisaDisplayController::class, 'index'])->name('sisa-display.index');
+    Route::post('/sisa-display', [SisaDisplayController::class, 'store'])->name('sisa-display.store');
 
     // Reports
     Route::get('/reports/stock-history', [StockHistoryController::class, 'index'])->name('reports.stock-history');

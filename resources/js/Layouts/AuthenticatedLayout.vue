@@ -30,6 +30,7 @@ const nav = computed(() => [
             { label: 'Stock Display', href: route('display-stocks.index'), active: route().current('display-stocks.index') },
             { label: 'Stock Transfer', href: route('stock-transfers.index'), active: route().current('stock-transfers.index') },
             { label: 'Stock OUT', href: route('stock-outs.index'), active: route().current('stock-outs.index') },
+            { label: 'Sisa Display', href: route('sisa-display.index'), active: route().current('sisa-display.index') },
             { label: 'Stock Adjustment', href: route('stock-adjustments.index'), active: route().current('stock-adjustments.index') },
         ],
     },
@@ -73,15 +74,15 @@ const roleBadge = computed(() => (isAdmin.value ? 'Admin' : 'Gudang'))
                 v-if="sidebarOpen"
                 class="fixed inset-0 z-30 bg-slate-900/50 lg:hidden"
                 @click="sidebarOpen = false"
-            />
+            ></div>
 
             <!-- Sidebar -->
             <aside
                 :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-                class="fixed inset-y-0 left-0 z-40 w-64 transform bg-brown-500 text-cream transition-transform duration-200 lg:translate-x-0"
+                class="fixed inset-y-0 left-0 z-40 w-64 transform bg-brand-800 text-cream transition-transform duration-200 lg:translate-x-0"
             >
-                <div class="flex h-16 items-center gap-2 border-b border-brown-600 px-5">
-                    <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-cream font-bold text-brown-500">S</span>
+                <div class="flex h-16 items-center gap-2 border-b border-brand-700 px-5">
+                    <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-cream font-bold text-brand-800">S</span>
                     <div>
                         <div class="text-sm font-bold text-white">StockECM</div>
                         <div class="text-[10px] uppercase tracking-wider text-cream/70">Warehouse Management</div>
@@ -94,7 +95,7 @@ const roleBadge = computed(() => (isAdmin.value ? 'Admin' : 'Gudang'))
                             v-if="!group.items"
                             :href="group.href"
                             class="flex items-center gap-3 rounded-lg px-3 py-2.5 font-medium transition"
-                            :class="group.active ? 'bg-cream/15 text-brand-300' : 'hover:bg-brown-600 hover:text-white'"
+                            :class="group.active ? 'bg-cream/15 text-brand-300' : 'hover:bg-brand-700 hover:text-white'"
                         >
                             <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" :d="icons[group.icon]" />
@@ -111,12 +112,12 @@ const roleBadge = computed(() => (isAdmin.value ? 'Admin' : 'Gudang'))
                                 :key="item.href"
                                 :href="item.href"
                                 class="flex items-center gap-3 rounded-lg px-3 py-2 transition"
-                                :class="item.active ? 'bg-cream/15 font-semibold text-brand-300' : 'hover:bg-brown-600 hover:text-white'"
+                                :class="item.active ? 'bg-cream/15 font-semibold text-brand-300' : 'hover:bg-brand-700 hover:text-white'"
                             >
                                 <span
                                     class="h-1.5 w-1.5 shrink-0 rounded-full"
                                     :class="item.active ? 'bg-brand-300' : 'bg-cream/40'"
-                                />
+                                ></span>
                                 {{ item.label }}
                             </Link>
                         </div>
@@ -163,7 +164,7 @@ const roleBadge = computed(() => (isAdmin.value ? 'Admin' : 'Gudang'))
 
                 <!-- Content -->
                 <main class="p-4 sm:p-6">
-                    <slot />
+                    <slot></slot>
                 </main>
             </div>
 

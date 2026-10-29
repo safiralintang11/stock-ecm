@@ -54,7 +54,7 @@ const fmt = (n) => Number(n).toLocaleString('id-ID')
                 v-for="row in rows"
                 :key="row.id"
                 class="rounded-2xl border bg-white p-4 shadow-sm transition hover:shadow-md"
-                :class="row.stock_status === 'OUT_OF_STOCK' ? 'border-red-200' : row.stock_status === 'LOW_STOCK' ? 'border-amber-200' : 'border-slate-200'"
+                :class="row.stock_status === 'OUT_OF_STOCK' ? 'border-red-200' : row.stock_status === 'LOW_STOCK' ? 'border-accent-200' : 'border-slate-200'"
             >
                 <div class="flex items-start justify-between gap-2">
                     <div>

@@ -28,24 +28,24 @@ const datasets = computed(() => [
     {
         label: 'Stock Masuk (Utama)',
         data: props.movement.stock_in,
-        borderColor: '#597928',
-        backgroundColor: 'rgba(89,121,40,0.10)',
+        borderColor: '#2C6334',
+        backgroundColor: 'rgba(44,99,52,0.10)',
         fill: true,
         tension: 0.35,
     },
     {
         label: 'Transfer ke Display',
         data: props.movement.transfer,
-        borderColor: '#91AC67',
-        backgroundColor: 'rgba(145,172,103,0.14)',
+        borderColor: '#8FBC94',
+        backgroundColor: 'rgba(143,188,148,0.14)',
         fill: true,
         tension: 0.35,
     },
     {
         label: 'OUT',
         data: props.movement.out,
-        borderColor: '#6E3511',
-        backgroundColor: 'rgba(110,53,17,0.08)',
+        borderColor: '#FF788D',
+        backgroundColor: 'rgba(255,120,141,0.10)',
         fill: true,
         tension: 0.35,
     },
@@ -64,10 +64,11 @@ const shortDate = (d) => new Date(d).toLocaleDateString('id-ID', { day: 'numeric
         </div>
 
         <!-- Cards -->
-        <div class="grid grid-cols-2 gap-3 lg:grid-cols-5">
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             <StatCard label="Total Produk" :value="fmt(cards.total_products)" tone="slate" />
             <StatCard label="Stock Utama" :value="fmt(cards.total_main_stock)" tone="blue" sub="PCS di gudang" />
             <StatCard label="Stock Display" :value="fmt(cards.total_display_stock)" tone="emerald" sub="PCS tersedia" />
+            <StatCard label="All Stock" :value="fmt(cards.total_all_stock)" tone="cream" sub="Utama + Display" />
             <StatCard label="OUT Hari Ini" :value="fmt(cards.out_today)" tone="brown" />
             <StatCard label="Low Stock" :value="fmt(cards.low_stock)" tone="amber" :sub="`${cards.out_of_stock} out of stock`" />
         </div>

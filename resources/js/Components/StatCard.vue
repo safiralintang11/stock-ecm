@@ -9,7 +9,7 @@ defineProps({
 const tones = {
     slate: 'bg-white border-slate-200 text-slate-800',
     emerald: 'bg-brand-50 border-brand-200 text-brand-900',
-    amber: 'bg-amber-50 border-amber-200 text-amber-900',
+    amber: 'bg-accent-50 border-accent-200 text-accent-900',
     red: 'bg-red-50 border-red-200 text-red-900',
     blue: 'bg-brand-100 border-brand-300 text-brand-800',
     brown: 'bg-brown-50 border-brown-200 text-brown-900',

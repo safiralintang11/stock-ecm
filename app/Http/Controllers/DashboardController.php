@@ -72,6 +72,7 @@ class DashboardController extends Controller
             'total_products' => Product::where('status', 'active')->count(),
             'total_main_stock' => (int) MainStock::query()->sum('qty'),
             'total_display_stock' => (int) $rows->sum('sisa_display'),
+            'total_all_stock' => (int) MainStock::query()->sum('qty') + (int) $rows->sum('sisa_display'),
             'out_today' => (int) $outByProduct->sum(),
             'low_stock' => $rows->where('stock_status', 'LOW_STOCK')->count(),
             'out_of_stock' => $rows->where('stock_status', 'OUT_OF_STOCK')->count(),

@@ -8,7 +8,7 @@ const props = defineProps({
 const config = computed(() => {
     switch (props.status) {
         case 'LOW_STOCK':
-            return { label: 'LOW STOCK', cls: 'bg-amber-100 text-amber-800 ring-amber-200' }
+            return { label: 'LOW STOCK', cls: 'bg-accent-100 text-accent-800 ring-accent-200' }
         case 'OUT_OF_STOCK':
             return { label: 'OUT OF STOCK', cls: 'bg-red-100 text-red-700 ring-red-200' }
         case 'inactive':

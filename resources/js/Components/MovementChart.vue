@@ -48,6 +48,6 @@ onUnmounted(() => chart?.destroy())
 
 <template>
     <div :style="{ height: height + 'px' }">
-        <canvas ref="canvas" />
+        <canvas ref="canvas"></canvas>
     </div>
 </template>

@@ -245,6 +245,7 @@ class StockFlowTest extends TestCase
         foreach ([
             route('dashboard'), route('products.index'), route('main-stocks.index'),
             route('display-stocks.index'), route('stock-transfers.index'), route('stock-outs.index'),
+            route('sisa-display.index'),
             route('stock-adjustments.index'), route('reports.stock-history'),
             route('reports.daily-stock'), route('reports.stock-movement'),
             route('users.index'), route('audit-logs.index'),
@@ -258,6 +259,7 @@ class StockFlowTest extends TestCase
         foreach ([
             route('dashboard'), route('products.index'), route('main-stocks.index'),
             route('display-stocks.index'), route('stock-transfers.index'), route('stock-outs.index'),
+            route('sisa-display.index'),
             route('reports.stock-history'), route('reports.daily-stock'), route('reports.stock-movement'),
         ] as $url) {
             $this->actingAs($this->gudang)->get($url)->assertOk();
@@ -338,6 +340,71 @@ class StockFlowTest extends TestCase
             ->assertSessionHas('error');
 
         $this->assertDatabaseHas('products', ['id' => $this->product->id]);
+    }
+
+    public function test_sisa_display_input_creates_out_for_difference(): void
+    {
+        $this->actingAs($this->gudang)->post(route('main-stocks.store'), [
+            'product_id' => $this->product->id, 'qty' => 500, 'trx_date' => today()->toDateString(),
+        ]);
+        $this->actingAs($this->gudang)->post(route('stock-transfers.store'), [
+            'product_id' => $this->product->id, 'qty' => 50, 'trx_date' => today()->toDateString(),
+        ]);
+
+        // Sisa fisik 40 dari display 50 → OUT 10
+        $this->actingAs($this->gudang)->post(route('sisa-display.store'), [
+            'product_id' => $this->product->id, 'qty' => 40, 'trx_date' => today()->toDateString(),
+        ])->assertRedirect();
+
+        $day = $this->day(today()->toDateString());
+        $this->assertEquals(10, $day->out_qty);
+        $this->assertEquals(40, $day->closing_qty);
+
+        $this->assertDatabaseHas('stock_outs', [
+            'trx_no' => 'OUT-'.today()->format('Ymd').'-001',
+            'qty' => 10,
+            'note' => 'Sisa display diinput manual',
+        ]);
+        $this->assertDatabaseHas('main_stocks', ['product_id' => $this->product->id, 'qty' => 450]);
+    }
+
+    public function test_sisa_display_equal_balance_creates_no_out(): void
+    {
+        $this->actingAs($this->gudang)->post(route('main-stocks.store'), [
+            'product_id' => $this->product->id, 'qty' => 500, 'trx_date' => today()->toDateString(),
+        ]);
+        $this->actingAs($this->gudang)->post(route('stock-transfers.store'), [
+            'product_id' => $this->product->id, 'qty' => 50, 'trx_date' => today()->toDateString(),
+        ]);
+
+        $this->actingAs($this->gudang)->post(route('sisa-display.store'), [
+            'product_id' => $this->product->id, 'qty' => 50, 'trx_date' => today()->toDateString(),
+        ])->assertRedirect();
+
+        $this->assertDatabaseCount('stock_outs', 0);
+        $day = $this->day(today()->toDateString());
+        $this->assertEquals(0, $day->out_qty);
+        $this->assertEquals(50, $day->closing_qty);
+    }
+
+    public function test_sisa_display_cannot_exceed_display(): void
+    {
+        $this->actingAs($this->gudang)->post(route('main-stocks.store'), [
+            'product_id' => $this->product->id, 'qty' => 500, 'trx_date' => today()->toDateString(),
+        ]);
+        $this->actingAs($this->gudang)->post(route('stock-transfers.store'), [
+            'product_id' => $this->product->id, 'qty' => 50, 'trx_date' => today()->toDateString(),
+        ]);
+
+        $this->actingAs($this->gudang)
+            ->post(route('sisa-display.store'), [
+                'product_id' => $this->product->id, 'qty' => 60, 'trx_date' => today()->toDateString(),
+            ])
+            ->assertSessionHasErrors('qty');
+
+        $this->assertDatabaseCount('stock_outs', 0);
+        $day = $this->day(today()->toDateString());
+        $this->assertEquals(50, $day->closing_qty);
     }
 
     public function test_dashboard_shows_low_and_out_of_stock_counts(): void

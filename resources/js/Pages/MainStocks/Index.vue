@@ -22,6 +22,17 @@ const modalOpen = ref(false)
 
 const balances = Object.fromEntries(props.products.map((p) => [p.id, p.main_qty]))
 
+const totals = props.products.reduce(
+    (acc, p) => ({
+        main: acc.main + p.main_qty,
+        display: acc.display + p.display_qty,
+        all: acc.all + p.main_qty + p.display_qty,
+    }),
+    { main: 0, display: 0, all: 0 }
+)
+
+const fmt = (n) => Number(n).toLocaleString('id-ID')
+
 const typeBadge = (type) => (type === 'INITIAL_STOCK' ? 'INITIAL STOCK' : 'STOCK IN')
 </script>
 
@@ -50,28 +61,38 @@ const typeBadge = (type) => (type === 'INITIAL_STOCK' ? 'INITIAL STOCK' : 'STOCK
                     />
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full min-w-[480px] text-sm">
+                    <table class="w-full min-w-[600px] text-sm">
                         <thead>
                             <tr class="border-b border-slate-100 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
                                 <th class="px-4 py-3">Produk</th>
                                 <th class="px-4 py-3">SKU</th>
                                 <th class="px-4 py-3 text-right">Stock Utama</th>
                                 <th class="px-4 py-3 text-right">Stock Display</th>
+                                <th class="px-4 py-3 text-right">All Stock</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             <tr v-if="products.length === 0">
-                                <td colspan="4" class="px-4 py-10 text-center text-slate-400">Tidak ada produk</td>
+                                <td colspan="5" class="px-4 py-10 text-center text-slate-400">Tidak ada produk</td>
                             </tr>
                             <tr v-for="p in products" :key="p.id" class="hover:bg-slate-50">
                                 <td class="px-4 py-3 font-semibold text-slate-800">{{ p.name }}</td>
                                 <td class="px-4 py-3">
                                     <span class="rounded bg-slate-100 px-2 py-0.5 font-mono text-xs text-slate-600">{{ p.sku }}</span>
                                 </td>
-                                <td class="px-4 py-3 text-right font-bold tabular-nums text-brand-700">{{ p.main_qty }} {{ p.unit }}</td>
-                                <td class="px-4 py-3 text-right tabular-nums text-slate-500">{{ p.display_qty }} {{ p.unit }}</td>
+                                <td class="px-4 py-3 text-right font-bold tabular-nums text-brand-700">{{ fmt(p.main_qty) }} {{ p.unit }}</td>
+                                <td class="px-4 py-3 text-right tabular-nums text-slate-500">{{ fmt(p.display_qty) }} {{ p.unit }}</td>
+                                <td class="px-4 py-3 text-right font-bold tabular-nums text-brown-700">{{ fmt(p.main_qty + p.display_qty) }} {{ p.unit }}</td>
                             </tr>
                         </tbody>
+                        <tfoot v-if="products.length > 0">
+                            <tr class="border-t border-slate-200 bg-slate-50 text-sm font-semibold text-slate-700">
+                                <td colspan="2" class="px-4 py-3">Total</td>
+                                <td class="px-4 py-3 text-right tabular-nums">{{ fmt(totals.main) }}</td>
+                                <td class="px-4 py-3 text-right tabular-nums">{{ fmt(totals.display) }}</td>
+                                <td class="px-4 py-3 text-right font-bold tabular-nums text-brown-700">{{ fmt(totals.all) }}</td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
             </div>

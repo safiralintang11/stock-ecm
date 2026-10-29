@@ -91,7 +91,8 @@ const timeOf = (log) => new Date(log.created_at).toLocaleString('id-ID', {
                 </table>
             </div>
 
-            <div v-if="logs.links.length > 3" class="border-t border-slate-100 p-4" v-html="logs.links" />
+            <div v-if="logs.links.length > 3" class="border-t border-slate-100 p-4" v-html="logs.links">
+            </div>
         </div>
     </AuthenticatedLayout>
 </template>

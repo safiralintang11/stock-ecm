@@ -29,7 +29,7 @@ const typeColor = (type) => {
         case 'STOCK_TRANSFER': return 'bg-brand-200 text-brand-800'
         case 'STOCK_DISPLAY': return 'bg-cream text-brown-600'
         case 'OUT': return 'bg-red-100 text-red-700'
-        case 'ADJUSTMENT': return 'bg-amber-100 text-amber-700'
+        case 'ADJUSTMENT': return 'bg-accent-100 text-accent-700'
         default: return 'bg-slate-100 text-slate-700'
     }
 }

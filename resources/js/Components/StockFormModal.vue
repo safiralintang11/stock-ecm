@@ -19,6 +19,8 @@ const props = defineProps({
     balanceLabel: { type: String, default: '' },
     balance: { type: Number, default: null },
     balances: { type: Object, default: null }, // map product_id -> available balance
+    minQty: { type: [Number, String], default: 1 },
+    hint: { type: String, default: '' },
     submitLabel: { type: String, default: 'Simpan' },
     maxWidth: { type: String, default: 'lg' },
 })
@@ -63,6 +65,11 @@ const currentBalance = computed(() => {
 const overBalance = computed(() => {
     if (currentBalance.value === null || form.qty === '' || props.mode === 'adjustment') return false
     return Number(form.qty) > currentBalance.value
+})
+
+const underMin = computed(() => {
+    if (form.qty === '' || props.mode === 'adjustment') return false
+    return Number(form.qty) < Number(props.minQty)
 })
 
 const submit = () => {
@@ -125,18 +132,22 @@ const submit = () => {
                             id="qty"
                             v-model="form.qty"
                             type="number"
-                            min="1"
+                            :min="minQty"
                             class="mt-1.5 block w-full"
                             :placeholder="selectedProduct ? `dalam ${selectedProduct.unit}` : 'Qty'"
                             required
                         />
                         <InputError class="mt-2" :message="form.errors.qty" />
-                        <p v-if="overBalance" class="mt-1 text-xs font-medium text-red-600">
+                        <p v-if="underMin" class="mt-1 text-xs font-medium text-red-600">
+                            Tidak boleh kurang dari {{ minQty }}.
+                        </p>
+                        <p v-else-if="overBalance" class="mt-1 text-xs font-medium text-red-600">
                             Melebihi {{ balanceLabel }} yang tersedia ({{ currentBalance }}).
                         </p>
                         <p v-else-if="selectedProduct && currentBalance !== null" class="mt-1 text-xs text-slate-500">
                             {{ balanceLabel }}: <span class="font-semibold text-slate-700">{{ currentBalance }} {{ selectedProduct.unit }}</span>
                         </p>
+                        <p v-if="hint" class="mt-1 text-xs text-slate-500">{{ hint }}</p>
                         <p v-if="selectedProduct" class="mt-1 text-xs text-slate-500">
                             Isi Carton: <span class="font-semibold text-slate-700">{{ selectedProduct.carton_qty }}</span>
                         </p>
