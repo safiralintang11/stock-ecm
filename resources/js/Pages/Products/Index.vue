@@ -10,6 +10,8 @@ import SecondaryButton from '@/Components/SecondaryButton.vue'
 import Modal from '@/Components/Modal.vue'
 import ConfirmModal from '@/Components/ConfirmModal.vue'
 import StockBadge from '@/Components/StockBadge.vue'
+import ExcelActions from '@/Components/ExcelActions.vue'
+import Pagination from '@/Components/Pagination.vue'
 
 const props = defineProps({
     products: Object,
@@ -95,7 +97,16 @@ const stockStatus = (p) => {
                 <h1 class="text-xl font-bold text-slate-800 sm:text-2xl">Master Produk</h1>
                 <p class="text-sm text-slate-500">Kelola data produk, SKU, isi carton, dan minimum stock</p>
             </div>
-            <PrimaryButton v-if="canManage" @click="openCreate">+ Tambah Produk</PrimaryButton>
+            <div class="flex flex-wrap items-center gap-2">
+                <ExcelActions
+                    export-route="products.export"
+                    :export-params="{ search, status }"
+                    template-route="products.template"
+                    import-route="products.import"
+                    :can-import="canManage"
+                />
+                <PrimaryButton v-if="canManage" @click="openCreate">+ Tambah Produk</PrimaryButton>
+            </div>
         </div>
 
         <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -157,7 +168,9 @@ const stockStatus = (p) => {
                 </table>
             </div>
 
-            <div v-if="products.links.length > 3" class="border-t border-slate-100 p-4" v-html="products.links" />
+            <div v-if="products.links.length > 3" class="border-t border-slate-100 p-4">
+                <Pagination :links="products.links" />
+            </div>
         </div>
 
         <!-- Create / Edit modal -->

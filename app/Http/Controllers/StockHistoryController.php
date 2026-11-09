@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\StockHistoryExport;
 use App\Models\StockHistory;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
 
 class StockHistoryController extends Controller
 {
@@ -37,5 +39,18 @@ class StockHistoryController extends Controller
             'filters' => ['search' => $search, 'type' => $type, 'from_date' => $from, 'to_date' => $to],
             'types' => StockHistory::TYPES,
         ]);
+    }
+
+    public function export(Request $request)
+    {
+        return Excel::download(
+            new StockHistoryExport(
+                trim((string) $request->input('search', '')),
+                $request->input('type', ''),
+                $request->input('from_date', ''),
+                $request->input('to_date', '')
+            ),
+            'stock-history-'.now()->format('Ymd-His').'.xlsx'
+        );
     }
 }

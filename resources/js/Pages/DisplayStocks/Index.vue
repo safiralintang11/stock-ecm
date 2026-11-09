@@ -6,6 +6,7 @@ import TextInput from '@/Components/TextInput.vue'
 import PrimaryButton from '@/Components/PrimaryButton.vue'
 import StockBadge from '@/Components/StockBadge.vue'
 import StockFormModal from '@/Components/StockFormModal.vue'
+import ExcelActions from '@/Components/ExcelActions.vue'
 
 const props = defineProps({
     date: String,
@@ -35,9 +36,18 @@ const fmt = (n) => Number(n).toLocaleString('id-ID')
     <Head title="Stock Display" />
 
     <AuthenticatedLayout>
-        <div class="mb-5">
-            <h1 class="text-xl font-bold text-slate-800 sm:text-2xl">Stock Display</h1>
-            <p class="text-sm text-slate-500">Stok harian yang digunakan untuk kebutuhan operasional</p>
+        <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <h1 class="text-xl font-bold text-slate-800 sm:text-2xl">Stock Display</h1>
+                <p class="text-sm text-slate-500">Stok harian yang digunakan untuk kebutuhan operasional</p>
+            </div>
+            <ExcelActions
+                export-route="display-stocks.export"
+                :export-params="{ search: query, date }"
+                template-route="display-stocks.template"
+                import-route="display-stocks.import"
+                can-import
+            />
         </div>
 
         <div class="mb-4 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row">

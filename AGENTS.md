@@ -6,6 +6,7 @@ Aplikasi manajemen stok gudang: Stock Utama → Stock Display → OUT → Sisa D
 - Laravel 12 + Inertia.js (Vue 3) + Tailwind CSS
 - MySQL (Laragon, root tanpa password, DB: `stockecm`)
 - Chart.js untuk grafik dashboard
+- **Excel**: `maatwebsite/excel` — export semua modul (`app/Exports/`), import + template (`app/Imports/`, `app/Exports/Templates/`). Template punya sheet "Petunjuk" berisi aturan kolom valid.
 
 ## Perintah Penting
 ```bash
@@ -14,7 +15,7 @@ php artisan migrate --force       # migrasi database
 php artisan db:seed --force       # seed users (Novan, Fan, Monica)
 php artisan db:seed --class=DemoDataSeeder --force  # data demo produk + transaksi
 npm run build                     # build frontend (pakai `cmd /c "npm ..."` di PowerShell)
-php artisan test                  # jalankan test suite (40 test)
+php artisan test                  # jalankan test suite (57 test)
 ```
 
 ## Akun Demo (password: `password`)

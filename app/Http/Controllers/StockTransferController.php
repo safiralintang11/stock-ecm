@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\StockTransfersExport;
+use App\Exports\Templates\StockTransfersTemplate;
+use App\Http\Controllers\Concerns\HandlesExcelImport;
 use App\Http\Requests\TransferRequest;
+use App\Imports\StockTransfersImport;
 use App\Models\Product;
 use App\Models\StockTransfer;
 use App\Services\Stock\StockEngine;
@@ -10,9 +14,12 @@ use App\Services\Stock\StockTransferService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
 
 class StockTransferController extends Controller
 {
+    use HandlesExcelImport;
+
     public function __construct(
         protected StockEngine $engine,
         protected StockTransferService $transferService,
@@ -64,5 +71,36 @@ class StockTransferController extends Controller
         );
 
         return back()->with('success', "Transfer {$transfer->trx_no} berhasil: {$transfer->qty} {$product->unit} dari Stock Utama ke Stock Display.");
+    }
+
+    public function export(Request $request)
+    {
+        return Excel::download(
+            new StockTransfersExport(
+                trim((string) $request->input('search', '')),
+                $request->input('from_date', ''),
+                $request->input('to_date', '')
+            ),
+            'stock-transfer-'.now()->format('Ymd-His').'.xlsx'
+        );
+    }
+
+    public function template()
+    {
+        return Excel::download(new StockTransfersTemplate(), 'template-stock-transfer.xlsx');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate(['file' => ['required', 'file', 'mimes:xlsx,xls,csv']]);
+
+        $import = new StockTransfersImport($request->user(), $this->transferService);
+        $error = $this->importFile($import, $request->file('file'));
+
+        if ($error) {
+            return redirect()->back()->with('error', $error);
+        }
+
+        return $this->importRedirect($import, "Import Stock Transfer selesai: {$import->successCount} baris berhasil diproses.");
     }
 }

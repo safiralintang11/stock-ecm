@@ -4,6 +4,8 @@ import { Head, router } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import TextInput from '@/Components/TextInput.vue'
 import SecondaryButton from '@/Components/SecondaryButton.vue'
+import ExcelActions from '@/Components/ExcelActions.vue'
+import Pagination from '@/Components/Pagination.vue'
 
 const props = defineProps({
     histories: Object,
@@ -41,9 +43,15 @@ const timeOf = (h) => new Date(h.created_at).toLocaleTimeString('id-ID', { hour:
     <Head title="Stock History" />
 
     <AuthenticatedLayout>
-        <div class="mb-5">
-            <h1 class="text-xl font-bold text-slate-800 sm:text-2xl">Stock History</h1>
-            <p class="text-sm text-slate-500">Semua perubahan stok tercatat di sini (read-only)</p>
+        <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <h1 class="text-xl font-bold text-slate-800 sm:text-2xl">Stock History</h1>
+                <p class="text-sm text-slate-500">Semua perubahan stok tercatat di sini (read-only)</p>
+            </div>
+            <ExcelActions
+                export-route="reports.stock-history.export"
+                :export-params="filters"
+            />
         </div>
 
         <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -103,7 +111,9 @@ const timeOf = (h) => new Date(h.created_at).toLocaleTimeString('id-ID', { hour:
                 </table>
             </div>
 
-            <div v-if="histories.links.length > 3" class="border-t border-slate-100 p-4" v-html="histories.links" />
+            <div v-if="histories.links.length > 3" class="border-t border-slate-100 p-4">
+                <Pagination :links="histories.links" />
+            </div>
         </div>
     </AuthenticatedLayout>
 </template>

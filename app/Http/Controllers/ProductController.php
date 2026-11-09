@@ -2,14 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ProductsExport;
+use App\Exports\Templates\ProductsTemplate;
+use App\Http\Controllers\Concerns\HandlesExcelImport;
 use App\Http\Requests\ProductRequest;
+use App\Imports\ProductsImport;
 use App\Models\Product;
 use App\Services\Stock\StockEngine;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ProductController extends Controller
 {
+    use HandlesExcelImport;
+
     public function __construct(protected StockEngine $engine)
     {
     }
@@ -67,5 +74,38 @@ class ProductController extends Controller
         $this->engine->writeAudit('Delete Product', 'Master Produk', $sku, null, null);
 
         return redirect()->route('products.index')->with('success', 'Produk berhasil dihapus.');
+    }
+
+    public function export(Request $request)
+    {
+        $search = trim((string) $request->input('search', ''));
+        $status = $request->input('status', '');
+
+        return Excel::download(
+            new ProductsExport($search, $status),
+            'master-produk-'.now()->format('Ymd-His').'.xlsx'
+        );
+    }
+
+    public function template()
+    {
+        return Excel::download(new ProductsTemplate(), 'template-produk.xlsx');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate(['file' => ['required', 'file', 'mimes:xlsx,xls,csv']]);
+
+        $import = new ProductsImport($request->user());
+        $error = $this->importFile($import, $request->file('file'));
+
+        if ($error) {
+            return redirect()->back()->with('error', $error);
+        }
+
+        return $this->importRedirect(
+            $import,
+            "Import produk selesai: {$import->created} produk baru, {$import->updated} produk diperbarui."
+        );
     }
 }

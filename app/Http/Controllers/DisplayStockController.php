@@ -2,17 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\TransferRequest;
+use App\Exports\DisplayStocksExport;
+use App\Exports\Templates\DisplayStocksTemplate;
+use App\Http\Controllers\Concerns\HandlesExcelImport;
+use App\Imports\DisplayStocksImport;
 use App\Models\DisplayStock;
 use App\Models\Product;
 use App\Services\Stock\StockEngine;
 use App\Services\Stock\StockTransferService;
+use App\Http\Requests\TransferRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
 
 class DisplayStockController extends Controller
 {
+    use HandlesExcelImport;
+
     public function __construct(
         protected StockEngine $engine,
         protected StockTransferService $transferService,
@@ -87,5 +94,35 @@ class DisplayStockController extends Controller
         );
 
         return back()->with('success', "Stock Display {$product->name} berhasil ditambahkan (Stock Transfer dicatat).");
+    }
+
+    public function export(Request $request)
+    {
+        $date = $request->input('date', today()->toDateString());
+        $search = trim((string) $request->input('search', ''));
+
+        return Excel::download(
+            new DisplayStocksExport($date, $search),
+            'stock-display-'.now()->format('Ymd-His').'.xlsx'
+        );
+    }
+
+    public function template()
+    {
+        return Excel::download(new DisplayStocksTemplate(), 'template-stock-display.xlsx');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate(['file' => ['required', 'file', 'mimes:xlsx,xls,csv']]);
+
+        $import = new DisplayStocksImport($request->user(), $this->transferService);
+        $error = $this->importFile($import, $request->file('file'));
+
+        if ($error) {
+            return redirect()->back()->with('error', $error);
+        }
+
+        return $this->importRedirect($import, "Import Stock Display selesai: {$import->successCount} baris berhasil ditambahkan (Stock Transfer).");
     }
 }

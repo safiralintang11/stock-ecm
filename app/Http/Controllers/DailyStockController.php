@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\DailyStockExport;
 use App\Models\DisplayStock;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
 
 class DailyStockController extends Controller
 {
@@ -54,5 +56,16 @@ class DailyStockController extends Controller
             'search' => $search,
             'rows' => $rows,
         ]);
+    }
+
+    public function export(Request $request)
+    {
+        return Excel::download(
+            new DailyStockExport(
+                $request->input('date', today()->toDateString()),
+                trim((string) $request->input('search', ''))
+            ),
+            'daily-stock-'.now()->format('Ymd-His').'.xlsx'
+        );
     }
 }

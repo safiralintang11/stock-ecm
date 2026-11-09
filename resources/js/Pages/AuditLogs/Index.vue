@@ -4,6 +4,8 @@ import { Head, router, useForm } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import TextInput from '@/Components/TextInput.vue'
 import SecondaryButton from '@/Components/SecondaryButton.vue'
+import ExcelActions from '@/Components/ExcelActions.vue'
+import Pagination from '@/Components/Pagination.vue'
 
 const props = defineProps({
     logs: Object,
@@ -34,9 +36,12 @@ const timeOf = (log) => new Date(log.created_at).toLocaleString('id-ID', {
     <Head title="Audit Log" />
 
     <AuthenticatedLayout>
-        <div class="mb-5">
-            <h1 class="text-xl font-bold text-slate-800 sm:text-2xl">Audit Log</h1>
-            <p class="text-sm text-slate-500">Rekam jejak semua perubahan penting</p>
+        <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <h1 class="text-xl font-bold text-slate-800 sm:text-2xl">Audit Log</h1>
+                <p class="text-sm text-slate-500">Rekam jejak semua perubahan penting</p>
+            </div>
+            <ExcelActions export-route="audit-logs.export" :export-params="filters" />
         </div>
 
         <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -91,7 +96,8 @@ const timeOf = (log) => new Date(log.created_at).toLocaleString('id-ID', {
                 </table>
             </div>
 
-            <div v-if="logs.links.length > 3" class="border-t border-slate-100 p-4" v-html="logs.links">
+            <div v-if="logs.links.length > 3" class="border-t border-slate-100 p-4">
+                <Pagination :links="logs.links" />
             </div>
         </div>
     </AuthenticatedLayout>

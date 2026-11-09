@@ -5,6 +5,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import TextInput from '@/Components/TextInput.vue'
 import SecondaryButton from '@/Components/SecondaryButton.vue'
 import MovementChart from '@/Components/MovementChart.vue'
+import ExcelActions from '@/Components/ExcelActions.vue'
 
 const props = defineProps({
     from_date: String,
@@ -59,9 +60,12 @@ const totals = computed(() => ({
     <Head title="Stock Movement" />
 
     <AuthenticatedLayout>
-        <div class="mb-5">
-            <h1 class="text-xl font-bold text-slate-800 sm:text-2xl">Stock Movement</h1>
-            <p class="text-sm text-slate-500">Pergerakan stok berdasarkan tanggal</p>
+        <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <h1 class="text-xl font-bold text-slate-800 sm:text-2xl">Stock Movement</h1>
+                <p class="text-sm text-slate-500">Pergerakan stok berdasarkan tanggal</p>
+            </div>
+            <ExcelActions export-route="reports.stock-movement.export" :export-params="{ from_date: from, to_date: to }" />
         </div>
 
         <div class="mb-4 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-end">

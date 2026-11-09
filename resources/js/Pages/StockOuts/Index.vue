@@ -6,6 +6,8 @@ import TextInput from '@/Components/TextInput.vue'
 import PrimaryButton from '@/Components/PrimaryButton.vue'
 import SecondaryButton from '@/Components/SecondaryButton.vue'
 import StockFormModal from '@/Components/StockFormModal.vue'
+import ExcelActions from '@/Components/ExcelActions.vue'
+import Pagination from '@/Components/Pagination.vue'
 
 const props = defineProps({
     outs: Object,
@@ -38,7 +40,16 @@ const balanceFor = (id) => props.balances?.[id] ?? null
                 <h1 class="text-xl font-bold text-slate-800 sm:text-2xl">OUT / Stock Keluar</h1>
                 <p class="text-sm text-slate-500">Pengeluaran harian dari Stock Display (tidak mengurangi Stock Utama langsung)</p>
             </div>
-            <PrimaryButton @click="modalOpen = true">+ Catat OUT</PrimaryButton>
+            <div class="flex flex-wrap items-center gap-2">
+                <ExcelActions
+                    export-route="stock-outs.export"
+                    :export-params="{ search: filters.search, from_date: filters.from_date, to_date: filters.to_date }"
+                    template-route="stock-outs.template"
+                    import-route="stock-outs.import"
+                    can-import
+                />
+                <PrimaryButton @click="modalOpen = true">+ Catat OUT</PrimaryButton>
+            </div>
         </div>
 
         <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -80,7 +91,9 @@ const balanceFor = (id) => props.balances?.[id] ?? null
                 </table>
             </div>
 
-            <div v-if="outs.links.length > 3" class="border-t border-slate-100 p-4" v-html="outs.links" />
+            <div v-if="outs.links.length > 3" class="border-t border-slate-100 p-4">
+                <Pagination :links="outs.links" />
+            </div>
         </div>
 
         <StockFormModal
