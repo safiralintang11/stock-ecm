@@ -9,6 +9,8 @@ import InputError from '@/Components/InputError.vue'
 import InputLabel from '@/Components/InputLabel.vue'
 import Modal from '@/Components/Modal.vue'
 import ConfirmModal from '@/Components/ConfirmModal.vue'
+import ExcelActions from '@/Components/ExcelActions.vue'
+import Pagination from '@/Components/Pagination.vue'
 
 const props = defineProps({
     users: Object,
@@ -81,7 +83,16 @@ const confirmDelete = () => {
                 <h1 class="text-xl font-bold text-slate-800 sm:text-2xl">Users</h1>
                 <p class="text-sm text-slate-500">Kelola user dan hak akses (Admin / Gudang)</p>
             </div>
-            <PrimaryButton @click="openCreate">+ Tambah User</PrimaryButton>
+            <div class="flex flex-wrap items-center gap-2">
+                <ExcelActions
+                    export-route="users.export"
+                    :export-params="{ search }"
+                    template-route="users.template"
+                    import-route="users.import"
+                    can-import
+                />
+                <PrimaryButton @click="openCreate">+ Tambah User</PrimaryButton>
+            </div>
         </div>
 
         <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -136,7 +147,9 @@ const confirmDelete = () => {
                 </table>
             </div>
 
-            <div v-if="users.links.length > 3" class="border-t border-slate-100 p-4" v-html="users.links" />
+            <div v-if="users.links.length > 3" class="border-t border-slate-100 p-4">
+                <Pagination :links="users.links" />
+            </div>
         </div>
 
         <Modal :show="modalOpen" max-width="lg" @close="modalOpen = false">

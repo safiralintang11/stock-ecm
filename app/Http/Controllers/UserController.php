@@ -2,14 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\Templates\UsersTemplate;
+use App\Exports\UsersExport;
+use App\Http\Controllers\Concerns\HandlesExcelImport;
 use App\Http\Requests\UserRequest;
+use App\Imports\UsersImport;
 use App\Models\User;
 use App\Services\Stock\StockEngine;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
 
 class UserController extends Controller
 {
+    use HandlesExcelImport;
+
     public function __construct(protected StockEngine $engine)
     {
     }
@@ -74,5 +81,34 @@ class UserController extends Controller
         $this->engine->writeAudit('Delete User', 'Users', null, ['name' => $name], null);
 
         return redirect()->route('users.index')->with('success', 'User berhasil dihapus.');
+    }
+
+    public function export(Request $request)
+    {
+        $search = trim((string) $request->input('search', ''));
+
+        return Excel::download(
+            new UsersExport($search),
+            'users-'.now()->format('Ymd-His').'.xlsx'
+        );
+    }
+
+    public function template()
+    {
+        return Excel::download(new UsersTemplate(), 'template-users.xlsx');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate(['file' => ['required', 'file', 'mimes:xlsx,xls,csv']]);
+
+        $import = new UsersImport($request->user());
+        $error = $this->importFile($import, $request->file('file'));
+
+        if ($error) {
+            return redirect()->back()->with('error', $error);
+        }
+
+        return $this->importRedirect($import, "Import user selesai: {$import->successCount} user baru dibuat.");
     }
 }

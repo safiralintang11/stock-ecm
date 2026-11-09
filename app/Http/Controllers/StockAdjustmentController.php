@@ -2,16 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\StockAdjustmentsExport;
+use App\Exports\Templates\StockAdjustmentsTemplate;
+use App\Http\Controllers\Concerns\HandlesExcelImport;
 use App\Http\Requests\AdjustmentRequest;
+use App\Imports\StockAdjustmentsImport;
 use App\Models\Product;
 use App\Models\StockAdjustment;
 use App\Services\Stock\StockAdjustmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
 
 class StockAdjustmentController extends Controller
 {
+    use HandlesExcelImport;
+
     public function __construct(protected StockAdjustmentService $adjustmentService)
     {
     }
@@ -55,5 +62,35 @@ class StockAdjustmentController extends Controller
         );
 
         return back()->with('success', "Adjustment {$product->name} berhasil disimpan.");
+    }
+
+    public function export(Request $request)
+    {
+        return Excel::download(
+            new StockAdjustmentsExport(
+                trim((string) $request->input('search', '')),
+                $request->input('scope', '')
+            ),
+            'stock-adjustment-'.now()->format('Ymd-His').'.xlsx'
+        );
+    }
+
+    public function template()
+    {
+        return Excel::download(new StockAdjustmentsTemplate(), 'template-stock-adjustment.xlsx');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate(['file' => ['required', 'file', 'mimes:xlsx,xls,csv']]);
+
+        $import = new StockAdjustmentsImport($request->user(), $this->adjustmentService);
+        $error = $this->importFile($import, $request->file('file'));
+
+        if ($error) {
+            return redirect()->back()->with('error', $error);
+        }
+
+        return $this->importRedirect($import, "Import Stock Adjustment selesai: {$import->successCount} baris berhasil diproses.");
     }
 }

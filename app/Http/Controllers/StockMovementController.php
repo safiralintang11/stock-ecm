@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\StockMovementExport;
 use App\Models\StockHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
 
 class StockMovementController extends Controller
 {
@@ -47,5 +49,16 @@ class StockMovementController extends Controller
             'to_date' => $to->toDateString(),
             'series' => $series,
         ]);
+    }
+
+    public function export(Request $request)
+    {
+        return Excel::download(
+            new StockMovementExport(
+                $request->input('from_date', today()->subDays(6)->toDateString()),
+                $request->input('to_date', today()->toDateString())
+            ),
+            'stock-movement-'.now()->format('Ymd-His').'.xlsx'
+        );
     }
 }

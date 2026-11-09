@@ -5,6 +5,8 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import TextInput from '@/Components/TextInput.vue'
 import PrimaryButton from '@/Components/PrimaryButton.vue'
 import StockFormModal from '@/Components/StockFormModal.vue'
+import ExcelActions from '@/Components/ExcelActions.vue'
+import Pagination from '@/Components/Pagination.vue'
 
 const props = defineProps({
     products: Array,
@@ -45,7 +47,16 @@ const typeBadge = (type) => (type === 'INITIAL_STOCK' ? 'INITIAL STOCK' : 'STOCK
                 <h1 class="text-xl font-bold text-slate-800 sm:text-2xl">Stock Utama</h1>
                 <p class="text-sm text-slate-500">Stok yang berada di gudang (satuan PCS)</p>
             </div>
-            <PrimaryButton @click="modalOpen = true">+ Input Stock Utama</PrimaryButton>
+            <div class="flex flex-wrap items-center gap-2">
+                <ExcelActions
+                    export-route="main-stocks.export"
+                    :export-params="{ search }"
+                    template-route="main-stocks.template"
+                    import-route="main-stocks.import"
+                    can-import
+                />
+                <PrimaryButton @click="modalOpen = true">+ Input Stock Utama</PrimaryButton>
+            </div>
         </div>
 
         <div class="grid gap-5 xl:grid-cols-2">
@@ -137,7 +148,9 @@ const typeBadge = (type) => (type === 'INITIAL_STOCK' ? 'INITIAL STOCK' : 'STOCK
                         </tbody>
                     </table>
                 </div>
-                <div v-if="histories.links.length > 3" class="border-t border-slate-100 p-4" v-html="histories.links" />
+                <div v-if="histories.links.length > 3" class="border-t border-slate-100 p-4">
+                    <Pagination :links="histories.links" />
+                </div>
             </div>
         </div>
 

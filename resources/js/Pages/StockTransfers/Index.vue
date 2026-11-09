@@ -10,6 +10,8 @@ import Modal from '@/Components/Modal.vue'
 import SecondaryButton from '@/Components/SecondaryButton.vue'
 import ProductSelect from '@/Components/ProductSelect.vue'
 import StockFormModal from '@/Components/StockFormModal.vue'
+import ExcelActions from '@/Components/ExcelActions.vue'
+import Pagination from '@/Components/Pagination.vue'
 
 const props = defineProps({
     transfers: Object,
@@ -40,7 +42,16 @@ const applyFilter = () => {
                 <h1 class="text-xl font-bold text-slate-800 sm:text-2xl">Stock Transfer</h1>
                 <p class="text-sm text-slate-500">Pindah stok dari Stock Utama ke Stock Display</p>
             </div>
-            <PrimaryButton @click="modalOpen = true">+ Stock Transfer</PrimaryButton>
+            <div class="flex flex-wrap items-center gap-2">
+                <ExcelActions
+                    export-route="stock-transfers.export"
+                    :export-params="{ search: filters.search, from_date: filters.from_date, to_date: filters.to_date }"
+                    template-route="stock-transfers.template"
+                    import-route="stock-transfers.import"
+                    can-import
+                />
+                <PrimaryButton @click="modalOpen = true">+ Stock Transfer</PrimaryButton>
+            </div>
         </div>
 
         <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -88,7 +99,9 @@ const applyFilter = () => {
                 </table>
             </div>
 
-            <div v-if="transfers.links.length > 3" class="border-t border-slate-100 p-4" v-html="transfers.links" />
+            <div v-if="transfers.links.length > 3" class="border-t border-slate-100 p-4">
+                <Pagination :links="transfers.links" />
+            </div>
         </div>
 
         <StockFormModal

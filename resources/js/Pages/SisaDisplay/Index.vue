@@ -6,6 +6,7 @@ import TextInput from '@/Components/TextInput.vue'
 import PrimaryButton from '@/Components/PrimaryButton.vue'
 import StockBadge from '@/Components/StockBadge.vue'
 import StockFormModal from '@/Components/StockFormModal.vue'
+import ExcelActions from '@/Components/ExcelActions.vue'
 
 const props = defineProps({
     rows: Array,
@@ -45,7 +46,16 @@ const fmt = (n) => Number(n).toLocaleString('id-ID')
                 <h1 class="text-xl font-bold text-slate-800 sm:text-2xl">Sisa Stock Display</h1>
                 <p class="text-sm text-slate-500">Input hasil hitung fisik — selisih otomatis dicatat sebagai Stock OUT</p>
             </div>
-            <PrimaryButton @click="openCreate">+ Input Sisa Display</PrimaryButton>
+            <div class="flex flex-wrap items-center gap-2">
+                <ExcelActions
+                    export-route="sisa-display.export"
+                    :export-params="{ search }"
+                    template-route="sisa-display.template"
+                    import-route="sisa-display.import"
+                    can-import
+                />
+                <PrimaryButton @click="openCreate">+ Input Sisa Display</PrimaryButton>
+            </div>
         </div>
 
         <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">

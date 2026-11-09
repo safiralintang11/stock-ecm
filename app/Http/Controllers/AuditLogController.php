@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\AuditLogsExport;
 use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AuditLogController extends Controller
 {
@@ -42,5 +44,19 @@ class AuditLogController extends Controller
                 'to_date' => $to,
             ],
         ]);
+    }
+
+    public function export(Request $request)
+    {
+        return Excel::download(
+            new AuditLogsExport(
+                trim((string) $request->input('search', '')),
+                $request->input('module', ''),
+                $request->input('user_id', ''),
+                $request->input('from_date', ''),
+                $request->input('to_date', '')
+            ),
+            'audit-log-'.now()->format('Ymd-His').'.xlsx'
+        );
     }
 }
