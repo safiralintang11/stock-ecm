@@ -4,7 +4,16 @@ declare(strict_types=1);
 
 use Maatwebsite\Excel\DefaultValueBinder;
 use Maatwebsite\Excel\Excel;
-use PhpOffice\PhpSpreadsheet\Reader\Csv;
+
+/**
+ * PhpSpreadsheet >= 5.6 memperkenalkan Reader\Csv::GUESS_ENCODING.
+ * Fallback ke string literal agar server dengan PhpSpreadsheet lama
+ * (mis. vendor belum di-update setelah composer install) tidak error
+ * "Class PhpOffice\PhpSpreadsheet\Reader\Csv not found".
+ */
+$csvGuessEncoding = class_exists(\PhpOffice\PhpSpreadsheet\Reader\Csv::class)
+    ? \PhpOffice\PhpSpreadsheet\Reader\Csv::GUESS_ENCODING
+    : 'guess';
 
 return [
     'exports' => [
@@ -143,7 +152,7 @@ return [
             'enclosure'        => '"',
             'escape_character' => '\\',
             'contiguous'       => false,
-            'input_encoding'   => Csv::GUESS_ENCODING,
+            'input_encoding'   => env('EXCEL_CSV_INPUT_ENCODING', $csvGuessEncoding),
         ],
 
         /*
