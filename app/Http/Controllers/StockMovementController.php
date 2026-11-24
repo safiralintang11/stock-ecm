@@ -55,8 +55,8 @@ class StockMovementController extends Controller
     {
         return Excel::download(
             new StockMovementExport(
-                $request->input('from_date', today()->subDays(6)->toDateString()),
-                $request->input('to_date', today()->toDateString())
+                trim((string) $request->input('from_date', today()->subDays(6)->toDateString())),
+                trim((string) $request->input('to_date', today()->toDateString()))
             ),
             'stock-movement-'.now()->format('Ymd-His').'.xlsx'
         );

@@ -14,10 +14,10 @@ class AuditLogController extends Controller
     public function index(Request $request)
     {
         $search = trim((string) $request->input('search', ''));
-        $module = $request->input('module', '');
-        $userId = $request->input('user_id', '');
-        $from = $request->input('from_date', '');
-        $to = $request->input('to_date', '');
+        $module = trim((string) $request->input('module', ''));
+        $userId = trim((string) $request->input('user_id', ''));
+        $from = trim((string) $request->input('from_date', ''));
+        $to = trim((string) $request->input('to_date', ''));
 
         $logs = AuditLog::query()
             ->with('user:id,name')
@@ -51,10 +51,10 @@ class AuditLogController extends Controller
         return Excel::download(
             new AuditLogsExport(
                 trim((string) $request->input('search', '')),
-                $request->input('module', ''),
-                $request->input('user_id', ''),
-                $request->input('from_date', ''),
-                $request->input('to_date', '')
+                trim((string) $request->input('module', '')),
+                trim((string) $request->input('user_id', '')),
+                trim((string) $request->input('from_date', '')),
+                trim((string) $request->input('to_date', ''))
             ),
             'audit-log-'.now()->format('Ymd-His').'.xlsx'
         );

@@ -9,6 +9,7 @@ use App\Http\Requests\StockInRequest;
 use App\Imports\MainStocksImport;
 use App\Models\Product;
 use App\Models\StockHistory;
+use App\Services\Stock\StockAdjustmentService;
 use App\Services\Stock\StockEngine;
 use App\Services\Stock\StockInService;
 use Illuminate\Http\Request;
@@ -22,6 +23,7 @@ class MainStockController extends Controller
     public function __construct(
         protected StockEngine $engine,
         protected StockInService $stockInService,
+        protected StockAdjustmentService $adjustmentService,
     ) {
     }
 
@@ -47,7 +49,12 @@ class MainStockController extends Controller
             ]);
 
         $histories = StockHistory::query()
-            ->whereIn('type', ['INITIAL_STOCK', 'STOCK_IN'])
+            ->where(function ($query) {
+                $query->whereIn('type', ['INITIAL_STOCK', 'STOCK_IN'])
+                    ->orWhere(fn ($adjustments) => $adjustments
+                        ->where('type', 'ADJUSTMENT')
+                        ->where('description', 'like', 'Adjustment main:%'));
+            })
             ->with(['product:id,sku,name,unit', 'user:id,name'])
             ->when($search !== '', fn ($q) => $q->whereHas('product', fn ($p) => $p
                 ->where('name', 'like', "%{$search}%")
@@ -98,13 +105,13 @@ class MainStockController extends Controller
     {
         $request->validate(['file' => ['required', 'file', 'mimes:xlsx,xls,csv']]);
 
-        $import = new MainStocksImport($request->user(), $this->stockInService);
+        $import = new MainStocksImport($request->user(), $this->adjustmentService);
         $error = $this->importFile($import, $request->file('file'));
 
         if ($error) {
             return redirect()->back()->with('error', $error);
         }
 
-        return $this->importRedirect($import, "Import Stock Utama selesai: {$import->successCount} baris berhasil diproses.");
+        return $this->importRedirect($import, "Import saldo Stock Utama dan Stock Display selesai: {$import->successCount} baris berhasil disetel.");
     }
 }

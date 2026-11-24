@@ -57,7 +57,9 @@ abstract class BaseImport implements ToCollection, WithHeadingRow
         $product = Product::where('sku', $sku)->first();
 
         if (! $product) {
-            throw ValidationException::withMessages(['sku' => "SKU '{$sku}' tidak ditemukan di Master Produk."]);
+            throw ValidationException::withMessages([
+                'sku' => "SKU '{$sku}' tidak ditemukan. Import Master Produk terlebih dahulu.",
+            ]);
         }
 
         return $product;

@@ -19,9 +19,17 @@ class StockAdjustmentService
      * Correct a stock balance (main or display) with a mandatory reason.
      * $delta is signed: positive = increase, negative = decrease.
      */
-    public function execute(Product $product, string $scope, int $delta, string $reason, Carbon $date, User $user): StockAdjustment
+    public function execute(
+        Product $product,
+        string $scope,
+        int $delta,
+        string $reason,
+        Carbon $date,
+        User $user,
+        bool $allowZero = false,
+    ): StockAdjustment
     {
-        if ($delta === 0) {
+        if ($delta === 0 && ! $allowZero) {
             throw ValidationException::withMessages(['qty' => 'Qty penyesuaian tidak boleh 0.']);
         }
 
@@ -97,6 +105,38 @@ class StockAdjustmentService
             );
 
             return $adjustment;
+        });
+    }
+
+    /**
+     * Set the selected balance to an exact target, recording the difference as an adjustment.
+     */
+    public function setBalance(
+        Product $product,
+        string $scope,
+        int $target,
+        string $reason,
+        Carbon $date,
+        User $user,
+    ): StockAdjustment {
+        if ($target < 0) {
+            throw ValidationException::withMessages(['qty' => 'Saldo akhir tidak boleh minus.']);
+        }
+
+        return DB::transaction(function () use ($product, $scope, $target, $reason, $date, $user) {
+            $current = $scope === 'main'
+                ? $this->engine->mainBalance($product, lock: true)
+                : (int) $this->engine->ensureDisplayDay($product, $date, lock: true)->closing_qty;
+
+            return $this->execute(
+                $product,
+                $scope,
+                $target - $current,
+                $reason,
+                $date,
+                $user,
+                allowZero: true,
+            );
         });
     }
 }

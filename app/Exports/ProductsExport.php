@@ -6,12 +6,12 @@ use App\Exports\Concerns\ExportStyles;
 use App\Models\Product;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 
-class ProductsExport implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize
+class ProductsExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithColumnWidths
 {
     use ExportStyles;
 
@@ -36,6 +36,20 @@ class ProductsExport implements FromCollection, WithHeadings, WithMapping, WithS
     public function headings(): array
     {
         return ['Nama Produk', 'SKU', 'Isi Carton', 'Satuan', 'Min Stock', 'Status', 'Stock Utama', 'Stock Display'];
+    }
+
+    public function columnWidths(): array
+    {
+        return [
+            'A' => 36,
+            'B' => 20,
+            'C' => 14,
+            'D' => 14,
+            'E' => 14,
+            'F' => 14,
+            'G' => 18,
+            'H' => 18,
+        ];
     }
 
     public function map($product): array

@@ -24,7 +24,7 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $search = trim((string) $request->input('search', ''));
-        $status = $request->input('status', '');
+        $status = trim((string) $request->input('status', ''));
 
         $products = Product::query()
             ->withBalances()
@@ -79,7 +79,7 @@ class ProductController extends Controller
     public function export(Request $request)
     {
         $search = trim((string) $request->input('search', ''));
-        $status = $request->input('status', '');
+        $status = trim((string) $request->input('status', ''));
 
         return Excel::download(
             new ProductsExport($search, $status),

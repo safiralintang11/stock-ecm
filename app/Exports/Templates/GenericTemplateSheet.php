@@ -6,10 +6,11 @@ use App\Exports\Concerns\ExportStyles;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithTitle;
 
-class GenericTemplateSheet implements FromArray, WithHeadings, WithStyles, ShouldAutoSize, WithTitle
+class GenericTemplateSheet implements FromArray, WithHeadings, WithStyles, ShouldAutoSize, WithTitle, WithStrictNullComparison
 {
     use ExportStyles;
 

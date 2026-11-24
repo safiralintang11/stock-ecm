@@ -10,18 +10,19 @@ class MainStocksTemplate implements Export, WithMultipleSheets
     public function sheets(): array
     {
         return [
-            new GenericTemplateSheet('Data', ['SKU Produk', 'Qty', 'Tanggal', 'Keterangan'], [
-                ['PRD001', 50, '2026-11-09', 'Stok awal bulan'],
-                ['PRD002', 24, '2026-11-09', ''],
+            new GenericTemplateSheet('Saldo Stock Utama', ['Produk', 'SKU', 'Satuan', 'Stock Utama', 'Stock Display'], [
+                ['Contoh Produk A', 'PRD001', 'PCS', 50, 0],
+                ['Contoh Produk B', 'PRD002', 'PCS', 0, 0],
             ]),
             new TemplateNotesSheet([
                 'Baris pertama adalah header — jangan diubah atau dihapus.',
-                'SKU Produk: gunakan SKU yang sudah ada di Master Produk. SKU yang tidak ditemukan akan gagal.',
-                'Qty: angka bulat minimal 1 (satuan PCS).',
-                'Tanggal: format YYYY-MM-DD (contoh 2026-11-09). Tidak boleh tanggal di masa depan.',
-                'Keterangan: opsional, maks 255 karakter.',
-                'Input pertama untuk suatu produk akan dicatat sebagai INITIAL STOCK, input berikutnya sebagai STOCK IN.',
-                'Setiap baris divalidasi sesuai aturan sistem; baris yang gagal akan dilaporkan di akhir proses.',
+                'Format kolom sama dengan sheet Saldo Stock Utama pada Export Stock Utama.',
+                'SKU: gunakan SKU yang sudah terdaftar. Jika belum ada, import Master Produk terlebih dahulu.',
+                'Edit Stock Utama dan/atau Stock Display. Nilai menjadi saldo akhir persis (PCS), bukan tambahan; angka 0 valid.',
+                'Produk, SKU, dan Satuan hanya sebagai identitas produk.',
+                'Import file export akan membaca sheet Saldo Stock Utama saja dan mengabaikan sheet histori.',
+                'Sistem menghitung selisih dan mencatat Stock Adjustment secara atomik; saldo harian display dihitung ulang. Tanggalnya otomatis tanggal import.',
+                'Baris yang gagal divalidasi akan dilaporkan setelah import.',
             ]),
         ];
     }

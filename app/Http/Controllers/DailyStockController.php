@@ -62,7 +62,7 @@ class DailyStockController extends Controller
     {
         return Excel::download(
             new DailyStockExport(
-                $request->input('date', today()->toDateString()),
+                trim((string) $request->input('date', today()->toDateString())),
                 trim((string) $request->input('search', ''))
             ),
             'daily-stock-'.now()->format('Ymd-His').'.xlsx'

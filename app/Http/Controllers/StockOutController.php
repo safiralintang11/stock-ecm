@@ -29,8 +29,8 @@ class StockOutController extends Controller
     public function index(Request $request)
     {
         $search = trim((string) $request->input('search', ''));
-        $from = $request->input('from_date', '');
-        $to = $request->input('to_date', '');
+        $from = trim((string) $request->input('from_date', ''));
+        $to = trim((string) $request->input('to_date', ''));
 
         $outs = StockOut::query()
             ->with(['product:id,sku,name,unit', 'user:id,name'])
@@ -80,8 +80,8 @@ class StockOutController extends Controller
         return Excel::download(
             new StockOutsExport(
                 trim((string) $request->input('search', '')),
-                $request->input('from_date', ''),
-                $request->input('to_date', '')
+                trim((string) $request->input('from_date', '')),
+                trim((string) $request->input('to_date', ''))
             ),
             'stock-out-'.now()->format('Ymd-His').'.xlsx'
         );

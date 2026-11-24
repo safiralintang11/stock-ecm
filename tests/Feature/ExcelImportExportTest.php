@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Exports\Templates\MainStocksTemplate;
 use App\Models\MainStock;
 use App\Models\Product;
 use App\Models\User;
@@ -11,7 +12,9 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Tests\TestCase;
 
 class ExcelImportExportTest extends TestCase
@@ -49,7 +52,7 @@ class ExcelImportExportTest extends TestCase
     {
         Storage::fake('local');
 
-        Excel::store(new class($headings, $rows) implements FromCollection, WithHeadings
+        Excel::store(new class($headings, $rows) implements FromCollection, WithHeadings, WithStrictNullComparison
         {
             public function __construct(private array $headings, private array $rows)
             {
@@ -100,6 +103,44 @@ class ExcelImportExportTest extends TestCase
             $response = $this->actingAs($this->admin)->get($url);
             $response->assertOk();
             $this->assertStringContainsString('spreadsheetml', (string) $response->headers->get('content-type'), "Export gagal untuk {$url}");
+        }
+    }
+
+    public function test_product_export_handles_empty_search_and_status_filters(): void
+    {
+        $response = $this->actingAs($this->admin)
+            ->get(route('products.export', ['search' => '', 'status' => '']));
+
+        $response->assertOk();
+        $this->assertStringContainsString(
+            'spreadsheetml',
+            (string) $response->headers->get('content-type')
+        );
+    }
+
+    public function test_filtered_exports_accept_empty_query_values(): void
+    {
+        $urls = [
+            route('products.export', ['search' => '', 'status' => '']),
+            route('stock-adjustments.export', ['search' => '', 'scope' => '']),
+            route('stock-outs.export', ['search' => '', 'from_date' => '', 'to_date' => '']),
+            route('stock-transfers.export', ['search' => '', 'from_date' => '', 'to_date' => '']),
+            route('users.export', ['search' => '']),
+            route('audit-logs.export', ['search' => '', 'module' => '', 'user_id' => '', 'from_date' => '', 'to_date' => '']),
+            route('reports.stock-history.export', ['search' => '', 'type' => '', 'from_date' => '', 'to_date' => '']),
+            route('reports.daily-stock.export', ['search' => '', 'date' => '']),
+            route('reports.stock-movement.export', ['from_date' => '', 'to_date' => '']),
+            route('display-stocks.export', ['search' => '', 'date' => '']),
+        ];
+
+        foreach ($urls as $url) {
+            $response = $this->actingAs($this->admin)->get($url);
+            $response->assertOk();
+            $this->assertStringContainsString(
+                'spreadsheetml',
+                (string) $response->headers->get('content-type'),
+                "Export gagal untuk {$url}"
+            );
         }
     }
 
@@ -159,11 +200,17 @@ class ExcelImportExportTest extends TestCase
         $this->assertDatabaseMissing('products', ['sku' => 'PRD004']);
     }
 
-    public function test_main_stocks_import_records_stock_in(): void
+    public function test_main_stocks_import_replaces_the_current_main_stock_balance(): void
     {
+        $this->actingAs($this->gudang)->post(route('main-stocks.store'), [
+            'product_id' => $this->product->id,
+            'qty' => 500,
+            'trx_date' => today()->toDateString(),
+        ]);
+
         $file = $this->makeXlsx(
-            ['SKU Produk', 'Qty', 'Tanggal', 'Keterangan'],
-            [['PRD001', 300, today()->toDateString(), 'Import stok']]
+            ['SKU Produk', 'Saldo Akhir', 'Tanggal', 'Keterangan'],
+            [['PRD001', 300, today()->toDateString(), 'Koreksi hitung fisik']]
         );
 
         $this->actingAs($this->gudang)
@@ -171,11 +218,158 @@ class ExcelImportExportTest extends TestCase
             ->assertSessionHas('success');
 
         $this->assertDatabaseHas('main_stocks', ['product_id' => $this->product->id, 'qty' => 300]);
+        $this->assertDatabaseHas('stock_adjustments', [
+            'product_id' => $this->product->id,
+            'scope' => 'main',
+            'qty' => -200,
+            'stock_before' => 500,
+            'stock_after' => 300,
+            'reason' => 'Koreksi hitung fisik',
+        ]);
         $this->assertDatabaseHas('stock_histories', [
             'product_id' => $this->product->id,
-            'type' => 'INITIAL_STOCK',
-            'qty' => 300,
+            'type' => 'ADJUSTMENT',
+            'qty' => 200,
         ]);
+
+        $this->actingAs($this->gudang)
+            ->get(route('main-stocks.index'))
+            ->assertInertia(fn ($page) => $page->where('histories.data.0.type', 'ADJUSTMENT'));
+    }
+
+    public function test_main_stocks_import_can_set_balance_to_zero(): void
+    {
+        $this->actingAs($this->gudang)->post(route('main-stocks.store'), [
+            'product_id' => $this->product->id,
+            'qty' => 2,
+            'trx_date' => today()->toDateString(),
+        ]);
+
+        $file = $this->makeXlsx(
+            ['SKU Produk', 'Saldo Akhir', 'Tanggal', 'Keterangan'],
+            [['PRD001', 0, today()->toDateString(), 'Stok fisik kosong']]
+        );
+
+        $this->actingAs($this->gudang)
+            ->post(route('main-stocks.import'), ['file' => $file])
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('main_stocks', ['product_id' => $this->product->id, 'qty' => 0]);
+        $this->assertDatabaseHas('stock_adjustments', [
+            'product_id' => $this->product->id,
+            'scope' => 'main',
+            'qty' => -2,
+            'stock_before' => 2,
+            'stock_after' => 0,
+        ]);
+    }
+
+    public function test_main_stock_export_can_be_edited_and_reimported_without_importing_history_sheet(): void
+    {
+        $this->product->update(['sku' => '100279']);
+
+        $this->actingAs($this->gudang)->post(route('main-stocks.store'), [
+            'product_id' => $this->product->id,
+            'qty' => 52,
+            'trx_date' => today()->toDateString(),
+        ]);
+
+        $file = UploadedFile::fake()->createWithContent(
+            'stock-utama.xlsx',
+            Excel::raw(new \App\Exports\MainStocksExport(), \Maatwebsite\Excel\Excel::XLSX)
+        );
+
+        $spreadsheet = IOFactory::load($file->getPathname());
+        $balanceSheet = $spreadsheet->getSheetByName('Saldo Stock Utama');
+        $this->assertNotNull($balanceSheet);
+        $balanceSheet->setCellValue('E2', 3);
+        IOFactory::createWriter($spreadsheet, 'Xlsx')->save($file->getPathname());
+        $spreadsheet->disconnectWorksheets();
+
+        $response = $this->actingAs($this->gudang)
+            ->post(route('main-stocks.import'), ['file' => $file]);
+        $response->assertSessionHas('success', fn ($message) => str_contains($message, '1 baris berhasil disetel')
+            && ! str_contains($message, 'baris gagal'));
+
+        $this->assertDatabaseHas('main_stocks', ['product_id' => $this->product->id, 'qty' => 52]);
+        $this->assertDatabaseHas('display_stocks', [
+            'product_id' => $this->product->id,
+            'closing_qty' => 3,
+        ]);
+        $this->assertDatabaseHas('stock_adjustments', [
+            'product_id' => $this->product->id,
+            'scope' => 'display',
+            'qty' => 3,
+            'stock_before' => 0,
+            'stock_after' => 3,
+        ]);
+    }
+
+    public function test_main_stock_template_imports_its_balance_sheet_and_keeps_zero_values(): void
+    {
+        $productB = Product::create([
+            'name' => 'Produk B', 'sku' => 'PRD002', 'carton_qty' => 12,
+            'unit' => 'PCS', 'min_stock' => 5, 'status' => 'active',
+        ]);
+
+        $file = UploadedFile::fake()->createWithContent(
+            'template-stock-utama.xlsx',
+            Excel::raw(new MainStocksTemplate(), \Maatwebsite\Excel\Excel::XLSX)
+        );
+
+        $this->actingAs($this->gudang)
+            ->post(route('main-stocks.import'), ['file' => $file])
+            ->assertSessionHas('success', fn ($message) => str_contains($message, '2 baris berhasil disetel')
+                && ! str_contains($message, 'baris gagal'));
+
+        $this->assertDatabaseHas('main_stocks', ['product_id' => $this->product->id, 'qty' => 50]);
+        $this->assertDatabaseHas('main_stocks', ['product_id' => $productB->id, 'qty' => 0]);
+        $this->assertDatabaseHas('display_stocks', ['product_id' => $this->product->id, 'closing_qty' => 0]);
+        $this->assertDatabaseHas('display_stocks', ['product_id' => $productB->id, 'closing_qty' => 0]);
+    }
+
+    public function test_main_stock_import_rejects_non_numeric_balance_without_changing_any_balance(): void
+    {
+        $this->actingAs($this->gudang)->post(route('main-stocks.store'), [
+            'product_id' => $this->product->id,
+            'qty' => 10,
+            'trx_date' => today()->toDateString(),
+        ]);
+
+        $file = $this->makeXlsx(
+            ['Produk', 'SKU', 'Satuan', 'Stock Utama', 'Stock Display'],
+            [['Produk A', 'PRD001', 'PCS', 'bukan angka', 0]]
+        );
+
+        $this->actingAs($this->gudang)
+            ->post(route('main-stocks.import'), ['file' => $file])
+            ->assertSessionHas('error', fn (string $message) => str_contains($message, 'Stock Utama wajib berupa angka bulat'));
+
+        $this->assertDatabaseHas('main_stocks', ['product_id' => $this->product->id, 'qty' => 10]);
+        $this->assertDatabaseMissing('display_stocks', ['product_id' => $this->product->id]);
+        $this->assertDatabaseCount('stock_adjustments', 0);
+    }
+
+    public function test_main_stock_import_rejects_negative_display_without_partially_changing_main_stock(): void
+    {
+        $this->actingAs($this->gudang)->post(route('main-stocks.store'), [
+            'product_id' => $this->product->id,
+            'qty' => 10,
+            'trx_date' => today()->toDateString(),
+        ]);
+
+        $file = $this->makeXlsx(
+            ['Produk', 'SKU', 'Satuan', 'Stock Utama', 'Stock Display'],
+            [['Produk A', 'PRD001', 'PCS', 0, -1]]
+        );
+
+        $this->actingAs($this->gudang)
+            ->post(route('main-stocks.import'), ['file' => $file])
+            ->assertSessionHas('error', fn (string $message) => str_contains($message, 'Stock Display wajib berupa angka bulat'));
+
+        $this->assertDatabaseHas('main_stocks', ['product_id' => $this->product->id, 'qty' => 10]);
+        $this->assertDatabaseMissing('display_stocks', ['product_id' => $this->product->id]);
+        $this->assertDatabaseCount('stock_adjustments', 0);
     }
 
     public function test_stock_transfers_import_moves_main_to_display(): void
@@ -275,16 +469,67 @@ class ExcelImportExportTest extends TestCase
         ]);
 
         $file = $this->makeXlsx(
-            ['SKU Produk', 'Scope', 'Qty', 'Alasan', 'Tanggal'],
-            [['PRD001', 'main', -10, 'Salah input', today()->toDateString()]]
+            ['SKU Produk', 'Scope', 'Saldo Akhir', 'Alasan', 'Tanggal'],
+            [['PRD001', 'main', 90, 'Koreksi saldo', today()->toDateString()]]
+        );
+
+        $response = $this->actingAs($this->admin)
+            ->post(route('stock-adjustments.import'), ['file' => $file]);
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseHas('main_stocks', ['product_id' => $this->product->id, 'qty' => 90]);
+        $this->assertDatabaseHas('stock_adjustments', ['product_id' => $this->product->id, 'scope' => 'main', 'qty' => -10]);
+    }
+
+    public function test_stock_adjustments_import_accepts_zero_target_and_records_zero_delta(): void
+    {
+        $this->actingAs($this->gudang)->post(route('main-stocks.store'), [
+            'product_id' => $this->product->id, 'qty' => 100, 'trx_date' => today()->toDateString(),
+        ]);
+
+        $file = $this->makeXlsx(
+            ['SKU Produk', 'Scope', 'Saldo Akhir', 'Alasan', 'Tanggal'],
+            [
+                ['PRD001', 'main', 0, 'Stok fisik habis', today()->toDateString()],
+                ['PRD001', 'main', 0, 'Konfirmasi stok nol', today()->toDateString()],
+            ]
+        );
+
+        $response = $this->actingAs($this->admin)
+            ->post(route('stock-adjustments.import'), ['file' => $file]);
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseHas('main_stocks', ['product_id' => $this->product->id, 'qty' => 0]);
+        $this->assertDatabaseHas('stock_adjustments', [
+            'product_id' => $this->product->id,
+            'scope' => 'main',
+            'qty' => -100,
+            'stock_before' => 100,
+            'stock_after' => 0,
+        ]);
+        $this->assertDatabaseHas('stock_adjustments', [
+            'product_id' => $this->product->id,
+            'scope' => 'main',
+            'qty' => 0,
+            'stock_before' => 0,
+            'stock_after' => 0,
+            'reason' => 'Konfirmasi stok nol',
+        ]);
+    }
+
+    public function test_adjustment_import_requires_unknown_sku_to_be_created_in_product_import_first(): void
+    {
+        $file = $this->makeXlsx(
+            ['SKU Produk', 'Scope', 'Saldo Akhir', 'Alasan', 'Tanggal'],
+            [['NEW001', 'main', 0, 'Koreksi stok', today()->toDateString()]]
         );
 
         $this->actingAs($this->admin)
             ->post(route('stock-adjustments.import'), ['file' => $file])
-            ->assertSessionHas('success');
+            ->assertSessionHas('error', fn (string $message) => str_contains($message, 'Import Master Produk terlebih dahulu'));
 
-        $this->assertDatabaseHas('main_stocks', ['product_id' => $this->product->id, 'qty' => 90]);
-        $this->assertDatabaseHas('stock_adjustments', ['product_id' => $this->product->id, 'scope' => 'main', 'qty' => -10]);
+        $this->assertDatabaseMissing('products', ['sku' => 'NEW001']);
+        $this->assertDatabaseCount('stock_adjustments', 0);
     }
 
     public function test_users_import_creates_users(): void

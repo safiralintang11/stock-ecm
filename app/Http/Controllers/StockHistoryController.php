@@ -14,9 +14,9 @@ class StockHistoryController extends Controller
     public function index(Request $request)
     {
         $search = trim((string) $request->input('search', ''));
-        $type = $request->input('type', '');
-        $from = $request->input('from_date', '');
-        $to = $request->input('to_date', '');
+        $type = trim((string) $request->input('type', ''));
+        $from = trim((string) $request->input('from_date', ''));
+        $to = trim((string) $request->input('to_date', ''));
 
         $histories = StockHistory::query()
             ->with(['product:id,sku,name,unit', 'user:id,name'])
@@ -46,9 +46,9 @@ class StockHistoryController extends Controller
         return Excel::download(
             new StockHistoryExport(
                 trim((string) $request->input('search', '')),
-                $request->input('type', ''),
-                $request->input('from_date', ''),
-                $request->input('to_date', '')
+                trim((string) $request->input('type', '')),
+                trim((string) $request->input('from_date', '')),
+                trim((string) $request->input('to_date', ''))
             ),
             'stock-history-'.now()->format('Ymd-His').'.xlsx'
         );

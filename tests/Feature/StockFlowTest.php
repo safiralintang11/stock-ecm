@@ -62,6 +62,30 @@ class StockFlowTest extends TestCase
         ]);
     }
 
+    public function test_incoming_main_stock_can_exceed_the_existing_balance(): void
+    {
+        $this->actingAs($this->gudang)->post(route('main-stocks.store'), [
+            'product_id' => $this->product->id,
+            'qty' => 2,
+            'trx_date' => today()->toDateString(),
+        ]);
+
+        $this->actingAs($this->gudang)
+            ->post(route('main-stocks.store'), [
+                'product_id' => $this->product->id,
+                'qty' => 100,
+                'trx_date' => today()->toDateString(),
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('main_stocks', ['product_id' => $this->product->id, 'qty' => 102]);
+        $this->assertDatabaseHas('stock_histories', [
+            'product_id' => $this->product->id,
+            'type' => 'STOCK_IN',
+            'qty' => 100,
+        ]);
+    }
+
     public function test_transfer_moves_main_to_display(): void
     {
         $this->actingAs($this->gudang)->post(route('main-stocks.store'), [

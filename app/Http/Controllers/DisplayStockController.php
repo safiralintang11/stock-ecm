@@ -98,7 +98,7 @@ class DisplayStockController extends Controller
 
     public function export(Request $request)
     {
-        $date = $request->input('date', today()->toDateString());
+        $date = trim((string) $request->input('date', today()->toDateString()));
         $search = trim((string) $request->input('search', ''));
 
         return Excel::download(

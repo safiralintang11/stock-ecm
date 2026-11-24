@@ -3,6 +3,7 @@
 namespace App\Imports\Concerns;
 
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 
 trait RowHelpers
@@ -15,6 +16,15 @@ trait RowHelpers
         return $row[$key] ?? null;
     }
 
+    protected function hasCell(mixed $row, string $key): bool
+    {
+        if ($row instanceof Collection) {
+            return $row->has($key);
+        }
+
+        return is_array($row) && array_key_exists($key, $row);
+    }
+
     protected function intCell(mixed $row, string $key): ?int
     {
         $value = $this->cell($row, $key);
@@ -23,7 +33,21 @@ trait RowHelpers
             return null;
         }
 
-        return (int) $value;
+        if (is_string($value)) {
+            $value = trim($value);
+        }
+
+        if ($value === '' || ! is_numeric($value)) {
+            return null;
+        }
+
+        $number = (float) $value;
+
+        if (! is_finite($number) || floor($number) !== $number) {
+            return null;
+        }
+
+        return (int) $number;
     }
 
     protected function strCell(mixed $row, string $key): ?string

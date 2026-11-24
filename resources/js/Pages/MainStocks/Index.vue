@@ -22,8 +22,6 @@ watch(search, (s) => {
 
 const modalOpen = ref(false)
 
-const balances = Object.fromEntries(props.products.map((p) => [p.id, p.main_qty]))
-
 const totals = props.products.reduce(
     (acc, p) => ({
         main: acc.main + p.main_qty,
@@ -35,7 +33,18 @@ const totals = props.products.reduce(
 
 const fmt = (n) => Number(n).toLocaleString('id-ID')
 
-const typeBadge = (type) => (type === 'INITIAL_STOCK' ? 'INITIAL STOCK' : 'STOCK IN')
+const typeBadge = (type) => {
+    if (type === 'INITIAL_STOCK') return 'INITIAL STOCK'
+    if (type === 'ADJUSTMENT') return 'PENYESUAIAN'
+    return 'STOCK IN'
+}
+
+const historyQty = (history) =>
+    history.type === 'ADJUSTMENT'
+        ? Number(history.main_after) - Number(history.main_before)
+        : Number(history.qty)
+
+const formatSignedQty = (qty) => `${qty > 0 ? '+' : ''}${fmt(qty)}`
 </script>
 
 <template>
@@ -111,7 +120,7 @@ const typeBadge = (type) => (type === 'INITIAL_STOCK' ? 'INITIAL STOCK' : 'STOCK
             <!-- Stock-in history -->
             <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <div class="border-b border-slate-100 p-4">
-                    <h2 class="font-bold text-slate-800">Histori Input Stock Utama</h2>
+                    <h2 class="font-bold text-slate-800">Histori Stock Utama</h2>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full min-w-[560px] text-sm">
@@ -126,7 +135,7 @@ const typeBadge = (type) => (type === 'INITIAL_STOCK' ? 'INITIAL STOCK' : 'STOCK
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             <tr v-if="histories.data.length === 0">
-                                <td colspan="5" class="px-4 py-10 text-center text-slate-400">Belum ada input stok</td>
+                                <td colspan="5" class="px-4 py-10 text-center text-slate-400">Belum ada histori Stock Utama</td>
                             </tr>
                             <tr v-for="h in histories.data" :key="h.id" class="hover:bg-slate-50">
                                 <td class="px-4 py-3 whitespace-nowrap">{{ h.trx_date }}</td>
@@ -137,12 +146,18 @@ const typeBadge = (type) => (type === 'INITIAL_STOCK' ? 'INITIAL STOCK' : 'STOCK
                                 <td class="px-4 py-3 text-center">
                                     <span
                                         class="rounded-full px-2 py-0.5 text-[11px] font-semibold"
-                                        :class="h.type === 'INITIAL_STOCK' ? 'bg-brown-100 text-brown-700' : 'bg-brand-100 text-brand-700'"
+                                        :class="{
+                                            'bg-brown-100 text-brown-700': h.type === 'INITIAL_STOCK',
+                                            'bg-amber-100 text-amber-700': h.type === 'ADJUSTMENT',
+                                            'bg-brand-100 text-brand-700': h.type === 'STOCK_IN',
+                                        }"
                                     >
                                         {{ typeBadge(h.type) }}
                                     </span>
                                 </td>
-                                <td class="px-4 py-3 text-right font-semibold tabular-nums">+{{ h.qty }} {{ h.product.unit }}</td>
+                                <td class="px-4 py-3 text-right font-semibold tabular-nums">
+                                    {{ formatSignedQty(historyQty(h)) }} {{ h.product.unit }}
+                                </td>
                                 <td class="px-4 py-3 text-center text-slate-500">{{ h.user?.name }}</td>
                             </tr>
                         </tbody>
@@ -159,8 +174,6 @@ const typeBadge = (type) => (type === 'INITIAL_STOCK' ? 'INITIAL STOCK' : 'STOCK
             title="Input Stock Utama"
             :action="route('main-stocks.store')"
             :products="products"
-            :balances="balances"
-            balance-label="Stock Utama saat ini"
             submit-label="Tambah Stock"
             @close="modalOpen = false"
         />

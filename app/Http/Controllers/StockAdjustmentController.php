@@ -26,7 +26,7 @@ class StockAdjustmentController extends Controller
     public function index(Request $request)
     {
         $search = trim((string) $request->input('search', ''));
-        $scope = $request->input('scope', '');
+        $scope = trim((string) $request->input('scope', ''));
 
         $adjustments = StockAdjustment::query()
             ->with(['product:id,sku,name,unit', 'user:id,name'])
@@ -69,7 +69,7 @@ class StockAdjustmentController extends Controller
         return Excel::download(
             new StockAdjustmentsExport(
                 trim((string) $request->input('search', '')),
-                $request->input('scope', '')
+                trim((string) $request->input('scope', ''))
             ),
             'stock-adjustment-'.now()->format('Ymd-His').'.xlsx'
         );

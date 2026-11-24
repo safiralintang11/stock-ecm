@@ -20,7 +20,7 @@ class StockAdjustmentsImport extends BaseImport
     {
         $product = $this->productBySku($this->strCell($row, 'sku_produk'));
         $scope = $this->strCell($row, 'scope');
-        $qty = $this->intCell($row, 'qty');
+        $target = $this->intCell($row, 'saldo_akhir') ?? $this->intCell($row, 'qty');
         $reason = $this->strCell($row, 'alasan');
         $date = $this->requireDate($row);
 
@@ -28,14 +28,14 @@ class StockAdjustmentsImport extends BaseImport
             throw ValidationException::withMessages(['scope' => 'Scope harus "main" atau "display".']);
         }
 
-        if ($qty === null || $qty === 0) {
-            throw ValidationException::withMessages(['qty' => 'Qty penyesuaian tidak boleh 0 (positif = tambah, negatif = kurang).']);
+        if ($target === null || $target < 0) {
+            throw ValidationException::withMessages(['saldo_akhir' => 'Saldo akhir wajib berupa angka bulat minimal 0.']);
         }
 
         if ($reason === null || $reason === '') {
             throw ValidationException::withMessages(['alasan' => 'Alasan penyesuaian wajib diisi.']);
         }
 
-        $this->adjustmentService->execute($product, $scope, $qty, $reason, $date, $this->user);
+        $this->adjustmentService->setBalance($product, $scope, $target, $reason, $date, $this->user);
     }
 }
