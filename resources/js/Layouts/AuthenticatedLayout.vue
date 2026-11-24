@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue'
-import { Head, Link, usePage } from '@inertiajs/vue3'
+import { Link, usePage } from '@inertiajs/vue3'
 import ApplicationLogo from '@/Components/ApplicationLogo.vue'
 import Dropdown from '@/Components/Dropdown.vue'
 import DropdownLink from '@/Components/DropdownLink.vue'
@@ -66,8 +66,6 @@ const roleBadge = computed(() => (isAdmin.value ? 'Admin' : 'Gudang'))
 
 <template>
     <div>
-        <Head title="StockECM" />
-
         <div class="min-h-screen bg-cream">
             <!-- Mobile overlay -->
             <div
@@ -82,7 +80,7 @@ const roleBadge = computed(() => (isAdmin.value ? 'Admin' : 'Gudang'))
                 class="fixed inset-y-0 left-0 z-40 w-64 transform bg-brand-800 text-cream transition-transform duration-200 lg:translate-x-0"
             >
                 <div class="flex h-16 items-center gap-2 border-b border-brand-700 px-5">
-                    <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-cream font-bold text-brand-800">S</span>
+                    <ApplicationLogo variant="inverse" class="h-9 w-9 shrink-0" />
                     <div>
                         <div class="text-sm font-bold text-white">StockECM</div>
                         <div class="text-[10px] uppercase tracking-wider text-cream/70">Warehouse Management</div>

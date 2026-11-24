@@ -28,7 +28,9 @@ trait HandlesExcelImport
         $failures = $import->failures;
 
         if ($import->successCount === 0 && count($failures) > 0) {
-            return redirect()->back()->with('error', 'Tidak ada baris yang berhasil diimport. '.$this->formatFailures($failures));
+            return redirect()->back()
+                ->with('error', 'Tidak ada baris yang berhasil diimport. '.$this->formatFailures($failures))
+                ->with('import_failures', $failures);
         }
 
         $message = $successMessage;
@@ -37,7 +39,9 @@ trait HandlesExcelImport
             $message .= ' '.$this->formatFailures($failures);
         }
 
-        return redirect()->back()->with('success', $message);
+        return redirect()->back()
+            ->with('success', $message)
+            ->with('import_failures', $failures);
     }
 
     protected function formatFailures(array $failures, int $limit = 5): string

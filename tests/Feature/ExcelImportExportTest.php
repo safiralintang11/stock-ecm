@@ -564,6 +564,12 @@ class ExcelImportExportTest extends TestCase
             ->post(route('stock-transfers.import'), ['file' => $file]);
 
         $response->assertSessionHas('success', fn (string $msg) => str_contains($msg, '1 baris berhasil') && str_contains($msg, 'gagal'));
+        $response->assertSessionHas('import_failures', function (array $failures) {
+            return count($failures) === 1
+                && $failures[0]['row'] === 3
+                && str_contains($failures[0]['message'], 'tidak cukup')
+                && $failures[0]['data']['sku_produk'] === 'PRD001';
+        });
         $this->assertDatabaseHas('stock_transfers', ['qty' => 30]);
     }
 

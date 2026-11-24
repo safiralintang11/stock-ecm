@@ -16,6 +16,7 @@ php artisan db:seed --force       # seed users (Novan, Fan, Monica)
 php artisan db:seed --class=DemoDataSeeder --force  # data demo produk + transaksi
 npm run build                     # build frontend (pakai `cmd /c "npm ..."` di PowerShell)
 php artisan test                  # jalankan test suite (57 test)
+php -d extension=pdo_sqlite vendor/bin/phpunit   # alternatif bila `artisan test` gagal "could not find driver" (pdo_sqlite tidak ikut ke subprocess)
 ```
 
 ## Akun Demo (password: `password`)

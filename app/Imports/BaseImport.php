@@ -18,7 +18,7 @@ abstract class BaseImport implements ToCollection, WithHeadingRow
     /** @var int Jumlah baris yang berhasil diproses. */
     public int $successCount = 0;
 
-    /** @var array<int, array{row: int, message: string}> Baris yang gagal. */
+    /** @var array<int, array{row: int, message: string, data: array<string, string>}> Baris yang gagal. */
     public array $failures = [];
 
     public function __construct(protected User $user)
@@ -41,12 +41,27 @@ abstract class BaseImport implements ToCollection, WithHeadingRow
                 $this->failures[] = [
                     'row' => $line,
                     'message' => collect($e->errors())->flatten()->implode('; '),
+                    'data' => $this->rowSnapshot($row),
                 ];
             }
         }
     }
 
     abstract protected function processRow(mixed $row): void;
+
+    /**
+     * Ringkasan isi baris yang gagal, dipakai untuk laporan error yang bisa diunduh.
+     *
+     * @return array<string, string>
+     */
+    protected function rowSnapshot(mixed $row): array
+    {
+        return collect($row)
+            ->map(fn ($value) => is_scalar($value) ? trim((string) $value) : '')
+            ->filter(fn ($value) => $value !== '')
+            ->take(15)
+            ->all();
+    }
 
     protected function productBySku(?string $sku): Product
     {
