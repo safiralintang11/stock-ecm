@@ -79,15 +79,11 @@ const roleBadge = computed(() => (isAdmin.value ? 'Admin' : 'Gudang'))
                 :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
                 class="fixed inset-y-0 left-0 z-40 w-64 transform bg-brand-800 text-cream transition-transform duration-200 lg:translate-x-0"
             >
-                <div class="flex h-16 items-center gap-2 border-b border-brand-700 px-5">
-                    <ApplicationLogo variant="inverse" class="h-9 w-9 shrink-0" />
-                    <div>
-                        <div class="text-sm font-bold text-white">StockECM</div>
-                        <div class="text-[10px] uppercase tracking-wider text-cream/70">Warehouse Management</div>
-                    </div>
+                <div class="flex h-20 items-center justify-center border-b border-brand-700 bg-cream px-4">
+                    <ApplicationLogo class="h-14 w-auto" />
                 </div>
 
-                <nav class="space-y-1 overflow-y-auto px-3 py-4 text-sm" style="height: calc(100% - 4rem)">
+                <nav class="space-y-1 overflow-y-auto px-3 py-4 text-sm" style="height: calc(100% - 5rem)">
                     <template v-for="group in nav" :key="group.label">
                         <Link
                             v-if="!group.items"
@@ -127,14 +123,17 @@ const roleBadge = computed(() => (isAdmin.value ? 'Admin' : 'Gudang'))
             <div class="lg:pl-64">
                 <!-- Topbar -->
                 <header class="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-6">
-                    <button
-                        class="rounded-lg p-2 text-slate-600 hover:bg-slate-100 lg:hidden"
-                        @click="sidebarOpen = !sidebarOpen"
-                    >
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button
+                            class="rounded-lg p-2 text-slate-600 hover:bg-slate-100 lg:hidden"
+                            @click="sidebarOpen = !sidebarOpen"
+                        >
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                        </button>
+                        <ApplicationLogo class="h-8 w-auto lg:hidden" />
+                    </div>
 
                     <div class="hidden text-sm font-medium text-slate-500 sm:block">
                         {{ new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) }}
